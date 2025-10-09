@@ -57,5 +57,7 @@ path_with_route_helper(Current, End, Visited, Route) :-
     path_with_route_helper(Next, End, [Next|Visited], Route).
 
 % CONSOLE OUTPUT
-% ?- path_with_route(a, c, Paths).
-% Paths = [[a, b, c], [a, d, c]].
+% ?- path_with_route(a,c,Paths).
+% Paths = [a, b, c] ;
+% Paths = [a, d, c] ;
+% false.
