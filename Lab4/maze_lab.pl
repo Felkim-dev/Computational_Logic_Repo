@@ -69,31 +69,6 @@ blocked(t,z).
 blocked(z,t).
 blocked(y,x).
 
-%TESTS
-% ?- can_move(d,e).
-% false.
-
-% ?- can_move(e,d).
-% true.
-
-% ?- can_move(f,g).
-% false.
-
-% ?- can_move(g,f).
-% true.
-
-% ?- can_move(v,o).
-% true.
-
-% ?- can_move(o,v).
-% true.
-
-% ?- can_move(t,u).
-% true.
-
-% ?- can_move(u,t).
-% false.
-
 %Rules 
 
 % Reasoning Predicates
@@ -101,26 +76,42 @@ can_move(X,Y):-
     edge(X,Y),
     \+ blocked(X,Y).
 
+count_options(X, Count) :-
+    findall(Z, can_move(X, Z), Options),
+    length(Options, Count).
+
+reason(X,Y,'path is blocked'):-
+    blocked(X,Y).
+
+reason(X,Y,'edge does not exist'):-
+    \+ edge(X,Y).
+
 reason(X, Y, 'leads directly to exit') :-
     can_move(X, Y),
     can_move(Y, exit),
     Y \== exit,
     !.
 
-reason(X, Y, 'multiple options available') :-
+reason(X, Y, 'destination reached') :-
     can_move(X, Y),
-    findall(Z, can_move(X, Z), Options),
-    length(Options, Count),
-    Count > 2.
+    Y == exit,
+    !.
+
+reason(entrance, Y, 'starting from entrance') :-
+    can_move(entrance, Y),
+    !.
 
 reason(X, Y, 'only path forward') :-
     can_move(X, Y),
-    findall(Z, can_move(X, Z), Options),
-    length(Options, 1).
+    count_options(X, 1),
+    !.
 
-reason(_, exit, 'destination reached').
-
-reason(entrance, _, 'starting from entrance').
+reason(X, Y, 'bidirectional path available') :-
+    can_move(X, Y),
+    can_move(Y, X),
+    Y \== exit,
+    entrance \== X,
+    !.
 
 reason(X,Y,'path is open'):- 
     can_move(X,Y).
@@ -155,3 +146,120 @@ find_path(X, Y, Path) :-
     format('========================================~n'),
     format('Path found: ~w~n', [Path]),
     format('========================================~n~n').
+
+
+%OPTIONALS
+
+% Preferences
+preferred_path(s,y).
+preferred_path(y,z).
+preferred_path(v,o).
+preferred_path(a,f).
+
+can_move_preference(X, Y) :-
+    can_move(X, Y),
+    preferred_path(X, Y).
+
+can_move_preference(X, Y) :-
+    can_move(X, Y),
+    \+ preferred_path(X, Y).
+
+move_preferred(X, Y, Visited, [Y|Visited]) :-
+    can_move_preference(X, Y),
+    reason(X, Y, Reason),
+    (   preferred_path(X, Y)
+    ->  format('Moving from ~w to ~w (PREFERRED)~n', [X, Y])
+    ;   format('Moving from ~w to ~w~n', [X, Y])
+    ),
+    format('Reason: ~w~n~n', [Reason]).
+
+move_preferred(X, Y, Visited, Path) :-
+    can_move_preference(X, Z),
+    \+ member(Z, Visited),
+    reason(X, Z, Reason),
+    (   preferred_path(X, Z)
+    ->  format('Moving from ~w to ~w (PREFERRED)~n', [X, Z])
+    ;   format('Moving from ~w to ~w~n', [X, Z])
+    ),
+    format('  Reason: ~w~n~n', [Reason]),
+    move_preferred(Z, Y, [Z|Visited], Path).
+
+find_path_preferred(X, Y, Path) :-
+    format('~n========================================~n'),
+    format('Path search WITH PREFERENCES~n'),
+    format('========================================~n~n'),
+    move_preferred(X, Y, [X], RevPath),
+    reverse(RevPath, Path),
+    format('========================================~n'),
+    format('Final path: ~w~n', [Path]),
+    format('========================================~n~n').
+
+%WHY
+why(X, Y) :- 
+    format(' Edge Analysis:~n'),
+    (   edge(X, Y)
+    ->  format(' Edge exists: YES~n')
+    ;   format(' Edge exists: NO~n')
+    ),
+
+    format('~n Blockage Analysis:~n'),
+    (   blocked(X, Y)
+    ->  format(' Path is blocked: YES~n')
+    ;   format(' Path is blocked: NO~n')
+    ),
+
+    format('~n Movement Analysis:~n'),
+    (   can_move(X, Y)
+    ->  format(' Can move: YES~n')
+    ;   format(' Can move: NO~n')
+    ),
+
+    format('~n Preference Analysis:~n'),
+    (   preferred_path(X, Y)
+    ->  format(' This path is preferred~n')
+    ;   format(' This path is NOT preferred~n')
+    ),
+
+    format('~n All Applicable Reasons:~n'),
+    findall(R, reason(X, Y, R), Reasons),
+    (   Reasons = []
+    ->  format('  (No specific reasons found)~n')
+    ;   print_reasons_list(Reasons)
+    ).
+
+% Auxiliar Predicate to print list
+print_reasons_list([]).
+print_reasons_list([R|Rest]) :-
+    format(' ~w~n', [R]),
+    print_reasons_list(Rest).
+
+%Performance Tracking
+
+move_tracking(X, Y, Visited, [Y|Visited], Steps, FinalSteps) :-
+    can_move(X, Y),
+    FinalSteps is Steps + 1,
+    reason(X, Y, Reason),
+    format(' Step ~w: Moving from ~w to ~w~n', [FinalSteps, X, Y]),
+    format(' Reason: ~w~n~n', [Reason]).
+
+move_tracking(X, Y, Visited, Path, Steps, FinalSteps) :-
+    can_move(X, Z),
+    \+ member(Z, Visited),
+    Steps1 is Steps + 1,  % Increments de counter
+    reason(X, Z, Reason),
+    format(' Step ~w: Moving from ~w to ~w~n', [Steps1, X, Z]),
+    format(' Reason: ~w~n~n', [Reason]),
+    move_tracking(Z, Y, [Z|Visited], Path, Steps1, FinalSteps).
+
+find_path_tracking(X, Y, Path, Steps) :-
+    format('~n========================================~n'),
+    format('Path search WITH Tracking~n'),
+    format('========================================~n~n'),
+    move_tracking(X, Y, [X], RevPath, 0, Steps),
+    reverse(RevPath, Path),
+
+    length(Path, PathLength),
+    format('~n Tracking Data: ~n'),
+    format('- Total steps taken: ~w~n',[Steps]),
+    format('- Path length (nodes): ~w~n',[PathLength]),
+    format('- Final Path: ~w~n',[Path]).
