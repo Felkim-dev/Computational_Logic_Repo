@@ -263,3 +263,14 @@ find_path_tracking(X, Y, Path, Steps) :-
     format('- Total steps taken: ~w~n',[Steps]),
     format('- Path length (nodes): ~w~n',[PathLength]),
     format('- Final Path: ~w~n',[Path]).
+
+%Comment
+% This program models a graph using facts edge/2 for connections and blocked/2 for restrictions. The predicate can_move/2 
+% determines the valid movements using the rule: "Can be moved if an edge exists and is not blocked". The predicate reason/3
+% contains multiple rules that generates explanations about the movement(e.g. path is blocked, destination reached, only
+% path forward,bidirectional path available). The order of the rules is crucial because Prolog uses the first that satifies
+% the rule. 
+
+% During the recursive search, move/4 invoke reason/3 before each decission to obtain the text of justification, that is printed
+% by format/2. This generates the trace where each movement is guided by logic rules. The extension why/2 can analyze and explain 
+% an edge existence, blockages and all the reasons that are aplicable for a specific movement.
