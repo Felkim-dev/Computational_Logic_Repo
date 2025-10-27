@@ -37,3 +37,14 @@ print_sudoku([]). %Base Case: Without files
 print_sudoku([Row|Rows]) :- %Recursive Case: Process row by row
     print_row(Row), %Prints the actual row
     print_sudoku(Rows). %Recurssion with the rest
+
+
+%Validation that the sudoku is 9x9
+validate_sudoku(Rows) :-
+    length(Rows, 9), %Columns = 9?
+    maplist(length_9, Rows). % Rows = 9?
+
+length_9(List) :- length(List, 9).
+
+
+%Puzzles Tested
