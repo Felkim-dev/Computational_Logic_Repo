@@ -24,3 +24,16 @@ blocks3([A1,A2,A3|R1],[B1,B2,B3|R2],[C1,C2,C3|R3]):-
     all_different([A1,A2,A3,B1,B2,B3,C1,C2,C3]), %This block needs to have all different numbers
     blocks3(R1,R2,R3). %Continue with the next 3 elements
 
+% Enhanced print
+print_row([]) :- nl. %Base Case:New_Line(Salto de Linea)
+
+print_row([H|T]) :- %Recursive Case: Print all the elements of an individual row
+    write(H),  %print Number
+    write(' '), %Print Space
+    print_row(T). %Recurssion with the rest
+
+print_sudoku([]). %Base Case: Without files
+
+print_sudoku([Row|Rows]) :- %Recursive Case: Process row by row
+    print_row(Row), %Prints the actual row
+    print_sudoku(Rows). %Recurssion with the rest
