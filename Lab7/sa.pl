@@ -89,14 +89,15 @@ pretty_color_by_region([Region|Regions],[Variable|Variables]):-
     format('~w = ~w~n', [Region,ColorName]),
 
     pretty_color_by_region(Regions,Variables).
-    
+
+% There is no way to coloring the map with 3 colores
 test_sa_3 :-
     writeln('Testing South America with 3 colors:'),
     colorize_sa(3, Vars),
     regions_sa(Regions),
     pretty_color_by_region(Regions, Vars).
 
-% Test con 4 colores
+% Test with 4 colors
 test_sa_4 :-
     writeln('Testing South America with 4 colors:'),
     colorize_sa(4, Vars),
